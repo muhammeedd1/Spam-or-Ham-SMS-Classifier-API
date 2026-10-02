@@ -2,15 +2,15 @@
 
 # 📩 Spam or Ham — SMS Classification API
 
-**A production-ready machine-learning microservice that classifies SMS messages as _spam_ or _ham_ in about a millisecond.**
-NLP preprocessing → TF-IDF → Multinomial Naive Bayes, served with FastAPI, secured with API-key auth, containerized with Docker and deployed on Render.
+**A production-style machine-learning microservice that classifies SMS messages as _spam_ or _ham_ in about a millisecond.**
+NLP preprocessing → TF-IDF → Multinomial Naive Bayes, served with FastAPI, secured with API-key auth, containerized with Docker and deployed on Blitz.cloud.
 
 ![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white)
 ![scikit-learn](https://img.shields.io/badge/scikit--learn-1.6-F7931E?logo=scikitlearn&logoColor=white)
 ![NLTK](https://img.shields.io/badge/NLTK-3.9-154F5B)
 ![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)
-![Render](https://img.shields.io/badge/Deployed%20on-Render-46E3B7?logo=render&logoColor=black)
+![Blitz.cloud](https://img.shields.io/badge/Deployed%20on-Blitz.cloud-0A66C2)
 
 </div>
 
@@ -29,7 +29,7 @@ NLP preprocessing → TF-IDF → Multinomial Naive Bayes, served with FastAPI, s
 9. [Getting Started (Local)](#9-getting-started-local)
 10. [Retraining the Model](#10-retraining-the-model)
 11. [Docker](#11-docker)
-12. [Deploying to Render](#12-deploying-to-render)
+12. [Deploying to Blitz.cloud](#12-deploying-to-blitzcloud)
 13. [Design Decisions](#13-design-decisions)
 14. [Limitations & Roadmap](#14-limitations--roadmap)
 15. [Author](#15-author)
@@ -43,10 +43,9 @@ Unsolicited SMS (phishing links, fake prizes, premium-rate scams) is a real prob
 - an exploratory notebook comparing four classical models,
 - a reproducible training script that exports versioned artifacts,
 - a typed, documented REST API that loads those artifacts once at startup,
-- a Docker image and a Render deployment so anyone can call it over HTTP.
+- a Docker image and a Blitz.cloud deployment so anyone can call it over HTTP.
 
-> **Live API docs (Swagger UI):** `https://<your-service>.onrender.com/docs`
-> _(Render free tier sleeps after inactivity — the first request may take a few seconds to wake it.)_
+> **Live API docs (Swagger UI):** `https://spam-or-ham-api.muhammed.blitz.cloud/docs`
 
 ---
 
@@ -59,7 +58,7 @@ Unsolicited SMS (phishing links, fake prizes, premium-rate scams) is a real prob
 | 🔐 **API-key authentication** | `POST` endpoints require an `x-api-key` header. The key lives in an environment variable, never in the image or the repo. |
 | 📦 **Single + batch prediction** | Classify one message or up to **150 messages** in one call. |
 | 🧾 **Typed contracts** | Pydantic request/response models give automatic validation and an interactive OpenAPI schema at `/docs`. |
-| 🩺 **Health endpoint** | `/health` reports service status, model-loaded flag and version — ready for Render/Kubernetes health probes. |
+| 🩺 **Health endpoint** | `/health` reports service status, model-loaded flag and version — ready for cloud/container health probes. |
 | 🐳 **Container-ready** | Slim Python 3.11 image, NLTK data baked in at build time, non-root user, honors the platform's `$PORT`. |
 | ⚙️ **12-factor config** | All settings via environment variables (`pydantic-settings`), with sensible defaults. |
 
@@ -159,7 +158,12 @@ Metrics of the **deployed artifacts** (`models/*.pkl`), evaluated on the held-ou
 
 ## 6. API Reference
 
-Base URL (local): `http://127.0.0.1:8000` · Interactive docs: **`/docs`** (Swagger) and **`/redoc`**.
+- **Base URL (local):** `http://127.0.0.1:8000`
+- **Base URL (deployed):** `https://spam-or-ham-api.muhammed.blitz.cloud`
+- **Swagger UI:** `https://spam-or-ham-api.muhammed.blitz.cloud/docs`
+- **Health:** `https://spam-or-ham-api.muhammed.blitz.cloud/health`
+
+Interactive docs are available at **`/docs`** (Swagger) and **`/redoc`** on both.
 
 | Method | Endpoint | Auth | Description |
 |---|---|:---:|---|
@@ -173,7 +177,7 @@ Authentication is done with the header **`x-api-key: <your key>`**.
 ### `GET /health`
 
 ```bash
-curl https://<your-service>.onrender.com/health
+curl https://spam-or-ham-api.muhammed.blitz.cloud/health
 ```
 ```json
 { "status": "ok", "model_loaded": true, "app_version": "1.0.0" }
@@ -182,7 +186,7 @@ curl https://<your-service>.onrender.com/health
 ### `POST /predict`
 
 ```bash
-curl -X POST https://<your-service>.onrender.com/predict \
+curl -X POST https://spam-or-ham-api.muhammed.blitz.cloud/predict \
   -H "Content-Type: application/json" \
   -H "x-api-key: $API_KEY" \
   -d '{"text": "WINNER!! You have won a free prize. Call 09061701461 now to claim your cash reward"}'
@@ -192,7 +196,7 @@ curl -X POST https://<your-service>.onrender.com/predict \
 ```
 
 ```bash
-curl -X POST https://<your-service>.onrender.com/predict \
+curl -X POST https://spam-or-ham-api.muhammed.blitz.cloud/predict \
   -H "Content-Type: application/json" \
   -H "x-api-key: $API_KEY" \
   -d '{"text": "Hey are we still meeting for lunch tomorrow?"}'
@@ -204,7 +208,7 @@ curl -X POST https://<your-service>.onrender.com/predict \
 ### `POST /predict/batch`
 
 ```bash
-curl -X POST https://<your-service>.onrender.com/predict/batch \
+curl -X POST https://spam-or-ham-api.muhammed.blitz.cloud/predict/batch \
   -H "Content-Type: application/json" \
   -H "x-api-key: $API_KEY" \
   -d '{"texts": ["Free entry in a weekly competition, text WIN to 80086", "ok see you at home"]}'
@@ -225,7 +229,7 @@ Results are returned **in the same order** as the input list.
 import requests
 
 resp = requests.post(
-    "https://<your-service>.onrender.com/predict",
+    "https://spam-or-ham-api.muhammed.blitz.cloud/predict",
     headers={"x-api-key": "YOUR_API_KEY"},
     json={"text": "Congratulations! You've been selected for a free iPhone. Click now."},
     timeout=10,
@@ -297,10 +301,10 @@ All configuration is read from environment variables (or a local `.env` file) vi
 | `MODEL_PATH` | – | `models/Best_model.pkl` | Path to the classifier |
 | `TFIDF_VECTORIZER_PATH` | – | `models/tfidf_vectorizer.pkl` | Path to the vectorizer |
 | `LABEL_ENCODER_PATH` | – | `models/Label_encoder.pkl` | Path to the label encoder |
-| `PORT` | – | `8000` (container) | Injected automatically by Render |
+| `PORT` | – | `8000` (container) | Provided by the hosting platform |
 | `NLTK_DATA` | – | set in Dockerfile | Where NLTK corpora are stored |
 
-> 🔒 **Never commit `.env`.** It is already in `.gitignore` and `.dockerignore`. On Render, set `API_KEY` from the dashboard instead.
+> 🔒 **Never commit `.env`.** It is already in `.gitignore` and `.dockerignore`. On Blitz.cloud, set `API_KEY` as an environment variable/secret in the service settings.
 
 Example local `.env`:
 
@@ -385,23 +389,42 @@ docker run --rm -p 8000:8000 -e API_KEY=dev-secret-key spam-or-ham
 curl http://localhost:8000/health
 ```
 
+Locally the container listens on port `8000` (the fallback when `PORT` is not set); on Blitz.cloud it listens on the platform-provided `PORT`.
+
 ---
 
-## 12. Deploying to Render
+## 12. Deploying to Blitz.cloud
 
-1. Push the repository to GitHub (make sure `.env` is **not** committed).
-2. In Render: **New → Web Service** → connect the repo.
-3. **Runtime:** `Docker` (Render detects the `Dockerfile` automatically).
-4. **Environment → Add Environment Variable:** `API_KEY = <your secret>`.
-5. **Health Check Path:** `/health`.
-6. Deploy. Render builds the image, injects `$PORT`, and exposes the service over HTTPS.
+The service is currently deployed on Blitz.cloud and publicly accessible:
 
-Smoke test:
+- **Base URL:** `https://spam-or-ham-api.muhammed.blitz.cloud`
+- **Swagger UI:** `https://spam-or-ham-api.muhammed.blitz.cloud/docs`
+- **Health:** `https://spam-or-ham-api.muhammed.blitz.cloud/health`
+
+**Deployment workflow**
+
+1. Push the project to GitHub (make sure `.env` is **not** committed).
+2. Connect the GitHub repository to Blitz.cloud.
+3. Select the `main` branch.
+4. Blitz detects the `Dockerfile` — keep it as the build/runtime configuration (runtime: Docker).
+5. Add `API_KEY` as an environment variable/secret in the service settings.
+6. Deploy. Blitz builds the Docker image and starts the service, which listens on the platform-provided `$PORT`.
+
+**Continuous deployment:** every new push to `main` triggers a new deployment automatically. The service uses no database.
+
+**Verify the deployment**
 
 ```bash
-curl https://<your-service>.onrender.com/health
+curl https://spam-or-ham-api.muhammed.blitz.cloud/health
+```
+```json
+{ "status": "ok", "model_loaded": true, "app_version": "1.0.0" }
+```
 
-curl -X POST https://<your-service>.onrender.com/predict \
+Then open **`https://spam-or-ham-api.muhammed.blitz.cloud/docs`** for the Swagger UI. `/health` and `/docs` are public; `/predict` and `/predict/batch` require the `x-api-key` header:
+
+```bash
+curl -X POST https://spam-or-ham-api.muhammed.blitz.cloud/predict \
   -H "Content-Type: application/json" \
   -H "x-api-key: $API_KEY" \
   -d '{"text": "URGENT! Your account has been suspended. Verify now."}'
