@@ -1,0 +1,44 @@
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+
+# Python cache
+__pycache__
+*.py[cod]
+*.pyo
+
+# Virtual environments
+.venv
+venv
+env
+
+# Training / development files
+dataset/
+notebooks/
+train.py
+app.py
+
+# Test / local files
+.pytest_cache/
+.coverage
+htmlcov/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Docker
+Dockerfile
+.dockerignore
