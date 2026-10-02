@@ -114,22 +114,11 @@ The dataset is **imbalanced**, which is why accuracy alone is a misleading metri
 ### Feature extraction & model
 
 - **TF-IDF** (unigrams, **5,870**-term vocabulary) fitted **on the training split only** to avoid data leakage.
-- **Multinomial Naive Bayes** (`alpha=1.0`) — a strong, fast baseline for sparse text features.
+- **Multinomial Naive Bayes** (`alpha=1.0`) — the classifier deployed by the API.
 - **Label encoding:** `ham → 0`, `spam → 1`.
-- Split: random **80 / 20** train/test (`random_state=42`).
+- **Split:** random **80 / 20** train/test (`random_state=42`).
 
-### Model comparison (exploratory notebook)
-
-Four classifiers were benchmarked in `notebooks/notebook.ipynb` (10-fold CV accuracy on the training set, spam-class metrics on the test set):
-
-| Model | CV accuracy | Precision | Recall | F1 |
-|---|---:|---:|---:|---:|
-| Multinomial NB | 0.966 | 0.991 | 0.733 | 0.843 |
-| Random Forest | 0.977 | 1.000 | 0.840 | 0.913 |
-| SVC | 0.976 | 0.992 | 0.833 | 0.906 |
-| KNN | 0.915 | 1.000 | 0.400 | 0.571 |
-
-The service ships Naive Bayes — see [Design Decisions](#13-design-decisions) for the trade-off, and the [Roadmap](#14-limitations--roadmap) for how recall can be pushed higher.
+**Model selection:** The deployed service uses Multinomial Naive Bayes (`alpha=1.0`) with TF-IDF features. The exploratory notebook contains the broader classical-model comparison and experimentation history.
 
 ---
 
@@ -260,7 +249,7 @@ print(resp.json())   # {'label': 'spam', 'is_spam': True, 'confidence': ...}
 ## 7. Project Structure
 
 ```
-spam-or-ham/
+Spam-or-Ham-SMS-Classifier-API/
 ├── src/
 │   ├── main.py             # FastAPI app: routes, CORS, API-key dependency
 │   ├── config.py           # Typed settings (pydantic-settings), artifact paths
@@ -436,7 +425,7 @@ curl -X POST https://spam-or-ham-api.muhammed.blitz.cloud/predict \
 
 | Decision | Why |
 |---|---|
-| **Multinomial Naive Bayes over heavier models** | Lightweight artifact, lightweight CPU inference, trivially cheap to host on a free tier, and **zero false positives** on the held-out set. Random Forest and SVC reach ~0.83–0.84 recall in the notebook, so the trade-off is deliberate: lowest serving cost and a precision-first profile versus ~10 points of recall. |
+| **Multinomial Naive Bayes over heavier models** | Lightweight artifact, lightweight CPU inference, trivially cheap to host on a free tier, and **zero false positives** on the held-out test set. The model provides a lightweight serving footprint and a precision-first profile that is suitable for this deployment-oriented project. |
 | **Shared `preprocess()` for train & serve** | Eliminates training/serving skew — the most common silent failure in deployed NLP systems. |
 | **TF-IDF fitted on the training split only** | Prevents test-set information from leaking into the vocabulary and IDF weights, keeping reported metrics honest. |
 | **Model loaded once at import time** | No per-request disk I/O; startup fails fast with a clear message if an artifact is missing. |
