@@ -2,7 +2,7 @@
 
 # 📩 Spam or Ham — SMS Classification API
 
-**A production-style machine-learning microservice that classifies SMS messages as _spam_ or _ham_ in about a millisecond.**
+**A production-style machine-learning microservice that classifies SMS messages as _spam_ or _ham_ using a lightweight CPU-based inference pipeline.**
 NLP preprocessing → TF-IDF → Multinomial Naive Bayes, served with FastAPI, secured with API-key auth, containerized with Docker and deployed on Blitz.cloud.
 
 ![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)
@@ -53,7 +53,7 @@ Unsolicited SMS (phishing links, fake prizes, premium-rate scams) is a real prob
 
 | | |
 |---|---|
-| ⚡ **Fast inference** | Preprocessing + vectorization + prediction in roughly **1 ms** per message on a single CPU core. Artifacts are loaded once at startup, not per request. |
+| ⚡ **Fast inference** | Preprocessing + vectorization + prediction using a lightweight CPU-based inference pipeline. Artifacts are loaded once at startup, not per request. |
 | 🎯 **Precision-first model** | **0 false positives** on the held-out test set — legitimate messages are never flagged as spam (see [Model Performance](#5-model-performance)). |
 | 🔐 **API-key authentication** | `POST` endpoints require an `x-api-key` header. The key lives in an environment variable, never in the image or the repo. |
 | 📦 **Single + batch prediction** | Classify one message or up to **150 messages** in one call. |
@@ -324,8 +324,8 @@ Generate a strong key with: `python -c "import secrets; print(secrets.token_urls
 
 ```bash
 # 1. Clone
-git clone https://github.com/muhammeedd1/spam-or-ham.git
-cd spam-or-ham
+git clone https://github.com/muhammeedd1/Spam-or-Ham-SMS-Classifier-API.git
+cd Spam-or-Ham-SMS-Classifier-API
 
 # 2. Create and activate a virtual environment
 python -m venv .venv
@@ -436,7 +436,7 @@ curl -X POST https://spam-or-ham-api.muhammed.blitz.cloud/predict \
 
 | Decision | Why |
 |---|---|
-| **Multinomial Naive Bayes over heavier models** | Lightweight artifact, sub-millisecond inference, trivially cheap to host on a free tier, and **zero false positives** on the held-out set. Random Forest and SVC reach ~0.83–0.84 recall in the notebook, so the trade-off is deliberate: lowest serving cost and a precision-first profile versus ~10 points of recall. |
+| **Multinomial Naive Bayes over heavier models** | Lightweight artifact, lightweight CPU inference, trivially cheap to host on a free tier, and **zero false positives** on the held-out set. Random Forest and SVC reach ~0.83–0.84 recall in the notebook, so the trade-off is deliberate: lowest serving cost and a precision-first profile versus ~10 points of recall. |
 | **Shared `preprocess()` for train & serve** | Eliminates training/serving skew — the most common silent failure in deployed NLP systems. |
 | **TF-IDF fitted on the training split only** | Prevents test-set information from leaking into the vocabulary and IDF weights, keeping reported metrics honest. |
 | **Model loaded once at import time** | No per-request disk I/O; startup fails fast with a clear message if an artifact is missing. |
